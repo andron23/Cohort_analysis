@@ -1,0 +1,81 @@
+---
+title: "[Когортный анализ от SF Education](https://sf.education/businessanalyst/?target=_blank)"
+author: "[Alexanyan Andron](https://www.alexanyan.tech/?target=_blank)"
+output: 
+  html_document:
+   toc: TRUE
+   theme: "readable"
+   highlight: "textmate"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+```{r library, include = FALSE}
+library(shiny) 
+library(xlsx)
+library(dplyr)
+library(ggplot2)
+library(patchwork)
+```
+
+# Connecting data using xlsx-package
+
+```{r predata}
+predata <- read.xlsx(file = 'cohort.xlsx', sheetIndex = 1, header = TRUE)
+
+str(predata)
+```
+
+# Preparing data with dplyr-package to show sales~date chart
+
+```{r prepare1}
+data <- predata %>%
+  group_by(Date) %>% 
+  summarise('Sum' = sum(Sum))
+
+str(data)
+```
+
+# Visualization of sales~date with ggplot2-package
+
+```{r salesdate}
+gg1 <- ggplot() + 
+  geom_line(data = data, aes(x = Date, y = Sum), col = 'blue') + 
+  labs(title = "Продажи за период") +
+  xlab("Дата") + 
+  ylab("Сумма продаж")
+
+gg1
+```
+
+# Preparing data with dplyr-package to show sales by cohorts chart
+
+```{r prepare2}
+data <- predata %>%
+  group_by(City, Sex, Date) %>% 
+  summarise('Sum' = sum(Sum)) 
+
+str(data)
+```
+
+# Visualization of cohorts with ggplot2-package
+
+```{r cohorts}
+gg2 <- ggplot() + 
+  geom_line(data = data, aes(x = Date, y = Sum, group = Sex, col = factor(Sex))) + 
+  facet_wrap(~City) + 
+  labs(col = "Пол", title = "Продажи с разбивкой по когортам", subtitle = "Разибвка по полу и городам") +
+  xlab("Дата") + 
+  ylab("Сумма продаж")
+
+gg2
+```
+
+# Comparison with patchwork-package
+
+```{r comparison}
+gg2/gg1
+```
